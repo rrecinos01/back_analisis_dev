@@ -1,0 +1,32 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon Db/server.js",
+    "start": "node Db/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/supportIpetik/proyectoanalisis2.git"
+  },
+  "author": "DesmondGc",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/supportIpetik/proyectoanalisis2/issues"
+  },
+  "homepage": "https://gitlab.com/supportIpetik/proyectoanalisis2#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "mysql2": "^3.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
