@@ -6,12 +6,23 @@ const router = express.Router();
 router.get('/empleado', async (req, res) => {
     try {
       const [rows] = await pool.query('SELECT * FROM empleado');
-      res.json({ success: true, users: rows });
+      res.json({ success: true, empleado: rows });
     } catch (error) {
       console.error('Error al consultar usuarios:', error);
       res.status(500).json({ success: false, message: 'Error al consultar usuarios' });
     }
 });
+
+router.get('/solicitudes', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM solicitudes');
+    res.json({ success: true, solicitudes: rows });
+  } catch (error) {
+    console.error('Error al consultar usuarios:', error);
+    res.status(500).json({ success: false, message: 'Error al consultar solicitudes' });
+  }
+});
+
 
 router.post('/crear_empleado', async (req, res) => {
   try {
