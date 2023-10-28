@@ -12,6 +12,36 @@ router.get('/empleado_list', async (req, res) => {
   }
 });
 
+router.get('/list_aguinaldo', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM aguinaldo');
+    res.json({ success: true, agui: rows });
+  } catch (error) {
+    console.error('Error al consultar bono:', error);
+    res.status(500).json({ success: false, message: 'Error al consultar bono' });
+  }
+});
+
+router.get('/list_bono', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM bono');
+    res.json({ success: true, bono: rows });
+  } catch (error) {
+    console.error('Error al consultar bono:', error);
+    res.status(500).json({ success: false, message: 'Error al consultar bono' });
+  }
+});
+
+router.get('/list_iggs', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM igss_cuotas');
+    res.json({ success: true, iggs: rows });
+  } catch (error) {
+    console.error('Error al consultar bono:', error);
+    res.status(500).json({ success: false, message: 'Error al consultar bono' });
+  }
+});
+
 router.get('/list_desembolsos', async (req, res) => {
     try {
       const [rows] = await pool.query('SELECT * FROM pago_nomina_ultimos_ingresos_mes_pasado');
