@@ -136,6 +136,39 @@ router.post('/insertar_prestamo_banc', async (req, res) => {
   }
 });
 
+router.post('/insertar_actualizar_ingreso_empleado', async (req, res) => {
+  try {
+    const { fecha, hora_entrada, hora_salida, empleado_id, descripcion } = req.body;
+
+    // Consulta para verificar si el id ya existe en la tabla ingreso_empleado
+    const [resultCheck] = await pool.query('SELECT * FROM ingreso_empleado WHERE empleado_id = ?', [empleado_id]);
+
+    if (resultCheck.length > 0) {
+      // Si el id ya existe, realiza una actualización
+      const updateData = {};
+      if (fecha) updateData.fecha = fecha;
+      if (hora_entrada) updateData.hora_entrada = hora_entrada;
+      if (hora_salida) updateData.hora_salida = hora_salida;
+      if (empleado_id) updateData.empleado_id = empleado_id;
+      if (descripcion) updateData.descripcion = descripcion;
+
+      const [result] = await pool.query('UPDATE ingreso_empleado SET ? WHERE empleado_id = ?', [updateData, empleado_id]);
+
+      res.json({ success: true, message: 'Ingreso de empleado actualizado correctamente' });
+    } else {
+      // Si el id no existe, realiza una inserción
+      const [result] = await pool.query(
+        'INSERT INTO ingreso_empleado (fecha, hora_entrada, hora_salida, empleado_id, descripcion) VALUES (?, ?, ?, ?, ?)',
+        [fecha, hora_entrada, hora_salida, empleado_id, descripcion]
+      );
+
+      res.json({ success: true, message: 'Ingreso de empleado insertado correctamente' });
+    }
+  } catch (error) {
+    console.error('Error al insertar/actualizar Ingreso de Empleado:', error);
+    res.status(500).json({ success: false, message: 'Error al insertar/actualizar Ingreso de Empleado' });
+  }
+});
 
 
 
