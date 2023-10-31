@@ -42,6 +42,16 @@ router.get('/list_iggs', async (req, res) => {
   }
 });
 
+router.get('/list_empleado_entra_salida', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM vista_ingreso_empleado');
+    res.json({ success: true, h_e_s: rows });
+  } catch (error) {
+    console.error('Error al consultar Hora Ingreso:', error);
+    res.status(500).json({ success: false, message: 'Error al consultar Hora ingreso' });
+  }
+});
+
 router.get('/list_desembolsos', async (req, res) => {
     try {
       const [rows] = await pool.query('SELECT * FROM pago_nomina_ultimos_ingresos_mes_pasado');
