@@ -11,12 +11,12 @@ import empleados from './Apis/empleados.js';
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.options('*', cors());
 
 app.use('/', loginRoutes);
 app.use('/', usersRoutes);
 app.use('/', desembolsos);
 app.use('/', empleados);
-
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
