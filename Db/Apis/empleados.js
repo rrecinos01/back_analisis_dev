@@ -225,44 +225,54 @@ router.post('/importar_empleados', async (req, res) => {
 
   for (const empleado of empleados) {
     try {
-      // Convertir las fechas al formato de MySQL (YYYY-MM-DD)
-      const fechaNacFormatoMySQL = empleado['Fecha Nacimiento'] ? convertirFecha(empleado['Fecha Nacimiento']) : null;
-      const fechaInicioFormatoMySQL = empleado['Fecha Inicio'] ? convertirFecha(empleado['Fecha Inicio']) : null;
-  
+      // Conversión de las fechas al formato de MySQL
+      const fechaNacConvertida = empleado['Fecha Nacimiento'] ? convertirFecha(empleado['Fecha Nacimiento']) : null;
+      const fechaIniConvertida = empleado['Fecha Inicio'] ? convertirFecha(empleado['Fecha Inicio']) : null;
+      
       // Verificar si el empleado existe
+      const queryExistencia = 'SELECT idempleado FROM empleado WHERE em_dpi = ?';
       const [empleadosExistentes] = await pool.query(queryExistencia, [empleado.Dpi]);
-  
+
       if (empleadosExistentes.length) {
+        // Empleado existe, actualizar
         const idEmpleado = empleadosExistentes[0].idempleado;
-        // Prepara tus consultas SQL usando las fechas convertidas
+        const queryUpdate = `
+          UPDATE empleado 
+          SET em_nombre = ?, em_pri_apellido = ?, em_seg_apellido = ?, em_fecha_nac = ?, em_pago_mens = ?, em_direccion = ?, em_fecha_ini = ? 
+          WHERE idempleado = ?`;
+
         await pool.query(queryUpdate, [
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          fechaNacFormatoMySQL, // Usar la fecha convertida
+          fechaNacConvertida,
           empleado.Salario,
           empleado.Dirección,
-          fechaInicioFormatoMySQL, // Usar la fecha convertida
+          fechaIniConvertida,
           idEmpleado,
         ]);
       } else {
-        // Inserta un nuevo empleado usando las fechas convertidas
+        // Empleado no existe, insertar
+        const queryInsert = `
+          INSERT INTO empleado (em_nombre, em_pri_apellido, em_seg_apellido, em_fecha_nac, em_pago_mens, em_dpi, em_direccion, em_fecha_ini) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
         await pool.query(queryInsert, [
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          fechaNacFormatoMySQL, // Usar la fecha convertida
+          fechaNacConvertida,
           empleado.Salario,
           empleado.Dpi,
           empleado.Dirección,
-          fechaInicioFormatoMySQL, // Usar la fecha convertida
+          fechaIniConvertida,
         ]);
       }
     } catch (error) {
       console.error('Error al procesar empleado:', error);
       return res.status(500).json({ success: false, message: 'Error al procesar empleado', error: error.message });
     }
-  }  
+  }
 
   res.json({ success: true, message: 'Proceso de importación completado' });
 });
