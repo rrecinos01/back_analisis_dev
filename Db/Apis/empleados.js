@@ -206,14 +206,18 @@ router.get('/fam_empleado/:idempleado', async (req, res) => {
 });
 // Función para convertir fechas de DD/MM/YY a YYYY-MM-DD
 function convertirFecha(fecha) {
-  const partes = fecha.split('/');
-  let año = partes[2];
-  // Ajuste para el año basado en el siglo
-  if (año.length === 2) {
-      año = parseInt(año, 10) > 50 ? '19' + año : '20' + año;
-  }
-  return `${año}-${partes[1]}-${partes[0]}`;
+    if (!fecha) return null; // Retorna null o una cadena vacía si la fecha es undefined
+
+    const partes = fecha.split('/');
+    if (partes.length < 3) return fecha; // Retorna la fecha original si no tiene el formato esperado
+
+    let año = partes[2];
+    if (año.length === 2) {
+        año = parseInt(año, 10) > 50 ? '19' + año : '20' + año;
+    }
+    return `${año}-${partes[1]}-${partes[0]}`;
 }
+
 
 
 router.post('/importar_empleados', async (req, res) => {
@@ -221,54 +225,44 @@ router.post('/importar_empleados', async (req, res) => {
 
   for (const empleado of empleados) {
     try {
-      // Conversión de las fechas al formato de MySQL
-      const fechaNacConvertida = convertirFecha(empleado['Fecha Nacimiento']);
-      const fechaIniConvertida = convertirFecha(empleado['Fecha Inicio']);
-
+      // Convertir las fechas al formato de MySQL (YYYY-MM-DD)
+      const fechaNacFormatoMySQL = empleado['Fecha Nacimiento'] ? convertirFecha(empleado['Fecha Nacimiento']) : null;
+      const fechaInicioFormatoMySQL = empleado['Fecha Inicio'] ? convertirFecha(empleado['Fecha Inicio']) : null;
+  
       // Verificar si el empleado existe
-      const queryExistencia = 'SELECT idempleado FROM empleado WHERE em_dpi = ?';
       const [empleadosExistentes] = await pool.query(queryExistencia, [empleado.Dpi]);
-
+  
       if (empleadosExistentes.length) {
-        // Empleado existe, actualizar
         const idEmpleado = empleadosExistentes[0].idempleado;
-        const queryUpdate = `
-          UPDATE empleado 
-          SET em_nombre = ?, em_pri_apellido = ?, em_seg_apellido = ?, em_fecha_nac = ?, em_pago_mens = ?, em_direccion = ?, em_fecha_ini = ? 
-          WHERE idempleado = ?`;
-
+        // Prepara tus consultas SQL usando las fechas convertidas
         await pool.query(queryUpdate, [
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          fechaNacConvertida,
+          fechaNacFormatoMySQL, // Usar la fecha convertida
           empleado.Salario,
           empleado.Dirección,
-          fechaIniConvertida,
+          fechaInicioFormatoMySQL, // Usar la fecha convertida
           idEmpleado,
         ]);
       } else {
-        // Empleado no existe, insertar
-        const queryInsert = `
-          INSERT INTO empleado (em_nombre, em_pri_apellido, em_seg_apellido, em_fecha_nac, em_pago_mens, em_dpi, em_direccion, em_fecha_ini) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
+        // Inserta un nuevo empleado usando las fechas convertidas
         await pool.query(queryInsert, [
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          fechaNacConvertida,
+          fechaNacFormatoMySQL, // Usar la fecha convertida
           empleado.Salario,
           empleado.Dpi,
           empleado.Dirección,
-          fechaIniConvertida,
+          fechaInicioFormatoMySQL, // Usar la fecha convertida
         ]);
       }
     } catch (error) {
       console.error('Error al procesar empleado:', error);
       return res.status(500).json({ success: false, message: 'Error al procesar empleado', error: error.message });
     }
-  }
+  }  
 
   res.json({ success: true, message: 'Proceso de importación completado' });
 });
