@@ -218,20 +218,30 @@ function convertirFecha(fecha) {
     return `${año}-${partes[1]}-${partes[0]}`;
 }
 
+function limpiarObjeto(obj) {
+  const objetoLimpio = {};
+  Object.keys(obj).forEach(key => {
+      if (obj[key] !== undefined) { // Copia solo si el valor no es undefined
+          objetoLimpio[key] = obj[key];
+      }
+  });
+  return objetoLimpio;
+}
 
 
 router.post('/importar_empleados', async (req, res) => {
   const empleados = req.body; // Asumiendo que `req.body` es un array de objetos de empleados.
 
   for (const empleado of empleados) {
+    const empleadoLimpio = limpiarObjeto(empleado);
     try {
       // Conversión de las fechas al formato de MySQL
-      const fechaNacConvertida = empleado['Fecha Nacimiento'] ? convertirFecha(empleado['Fecha Nacimiento']) : null;
-      const fechaIniConvertida = empleado['Fecha Inicio'] ? convertirFecha(empleado['Fecha Inicio']) : null;
+      const fechaNacConvertida = empleadoLimpio['Fecha Nacimiento'] ? convertirFecha(empleadoLimpio['Fecha Nacimiento']) : null;
+      const fechaIniConvertida = empleadoLimpio['Fecha Inicio'] ? convertirFecha(empleadoLimpio['Fecha Inicio']) : null;
       
       // Verificar si el empleado existe
       const queryExistencia = 'SELECT idempleado FROM empleado WHERE em_dpi = ?';
-      const [empleadosExistentes] = await pool.query(queryExistencia, [empleado.Dpi]);
+      const [empleadosExistentes] = await pool.query(queryExistencia, [empleadoLimpio.Dpi]);
 
       if (empleadosExistentes.length) {
         // Empleado existe, actualizar
@@ -242,12 +252,12 @@ router.post('/importar_empleados', async (req, res) => {
           WHERE idempleado = ?`;
 
         await pool.query(queryUpdate, [
-          empleado.Nombre,
-          empleado['Primer Apellido'],
-          empleado['Segundo Apellido'],
+          empleadoLimpio.Nombre,
+          empleadoLimpio['Primer Apellido'],
+          empleadoLimpio['Segundo Apellido'],
           fechaNacConvertida,
-          empleado.Salario,
-          empleado.Dirección,
+          empleadoLimpio.Salario,
+          empleadoLimpio.Dirección,
           fechaIniConvertida,
           idEmpleado,
         ]);
@@ -258,13 +268,13 @@ router.post('/importar_empleados', async (req, res) => {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
         await pool.query(queryInsert, [
-          empleado.Nombre,
-          empleado['Primer Apellido'],
-          empleado['Segundo Apellido'],
+          empleadoLimpio.Nombre,
+          empleadoLimpio['Primer Apellido'],
+          empleadoLimpio['Segundo Apellido'],
           fechaNacConvertida,
-          empleado.Salario,
-          empleado.Dpi,
-          empleado.Dirección,
+          empleadoLimpio.Salario,
+          empleadoLimpio.Dpi,
+          empleadoLimpio.Dirección,
           fechaIniConvertida,
         ]);
       }
