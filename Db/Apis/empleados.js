@@ -206,6 +206,60 @@ router.get('/fam_empleado/:idempleado', async (req, res) => {
 });
 
 
+router.post('/importar_empleados', async (req, res) => {
+  const empleados = req.body; // Asumiendo que `req.body` es un array de objetos de empleados.
+
+  for (const empleado of empleados) {
+    try {
+      // Verificar si el empleado existe
+      const queryExistencia = 'SELECT idempleado FROM empleado WHERE em_dpi = ?';
+      const [empleadosExistentes] = await pool.query(queryExistencia, [empleado.Dpi]);
+
+      if (empleadosExistentes.length) {
+        // Empleado existe, actualizar
+        const idEmpleado = empleadosExistentes[0].idempleado;
+        const queryUpdate = `
+          UPDATE empleado 
+          SET em_nombre = ?, em_pri_apellido = ?, em_seg_apellido = ?, em_fecha_nac = ?, em_pago_mens = ?, em_direccion = ?, em_fecha_ini = ? 
+          WHERE idempleado = ?`;
+
+        await pool.query(queryUpdate, [
+          empleado.Nombre,
+          empleado['Primer Apellido'],
+          empleado['Segundo Apellido'],
+          empleado['Fecha Nacimiento'],
+          empleado.Salario,
+          empleado.Dirección,
+          empleado['Fecha Inicio'],
+          idEmpleado,
+        ]);
+      } else {
+        // Empleado no existe, insertar
+        const queryInsert = `
+          INSERT INTO empleado (em_nombre, em_pri_apellido, em_seg_apellido, em_fecha_nac, em_pago_mens, em_dpi, em_direccion, em_fecha_ini) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        await pool.query(queryInsert, [
+          empleado.Nombre,
+          empleado['Primer Apellido'],
+          empleado['Segundo Apellido'],
+          empleado['Fecha Nacimiento'],
+          empleado.Salario,
+          empleado.Dpi,
+          empleado.Dirección,
+          empleado['Fecha Inicio'],
+        ]);
+      }
+    } catch (error) {
+      console.error('Error al procesar empleado:', error);
+      return res.status(500).json({ success: false, message: 'Error al procesar empleado', error: error.message });
+    }
+  }
+
+  res.json({ success: true, message: 'Proceso de importación completado' });
+});
+
+
 
 
 export default router;
