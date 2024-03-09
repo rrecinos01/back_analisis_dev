@@ -204,6 +204,16 @@ router.get('/fam_empleado/:idempleado', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al obtener los datos de fam_empleado' });
   }
 });
+// Función para convertir fechas de DD/MM/YY a YYYY-MM-DD
+function convertirFecha(fecha) {
+  const partes = fecha.split('/');
+  let año = partes[2];
+  // Ajuste para el año basado en el siglo
+  if (año.length === 2) {
+      año = parseInt(año, 10) > 50 ? '19' + año : '20' + año;
+  }
+  return `${año}-${partes[1]}-${partes[0]}`;
+}
 
 
 router.post('/importar_empleados', async (req, res) => {
@@ -211,6 +221,10 @@ router.post('/importar_empleados', async (req, res) => {
 
   for (const empleado of empleados) {
     try {
+      // Conversión de las fechas al formato de MySQL
+      const fechaNacConvertida = convertirFecha(empleado['Fecha Nacimiento']);
+      const fechaIniConvertida = convertirFecha(empleado['Fecha Inicio']);
+
       // Verificar si el empleado existe
       const queryExistencia = 'SELECT idempleado FROM empleado WHERE em_dpi = ?';
       const [empleadosExistentes] = await pool.query(queryExistencia, [empleado.Dpi]);
@@ -227,10 +241,10 @@ router.post('/importar_empleados', async (req, res) => {
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          empleado['Fecha Nacimiento'],
+          fechaNacConvertida,
           empleado.Salario,
           empleado.Dirección,
-          empleado['Fecha Inicio'],
+          fechaIniConvertida,
           idEmpleado,
         ]);
       } else {
@@ -243,11 +257,11 @@ router.post('/importar_empleados', async (req, res) => {
           empleado.Nombre,
           empleado['Primer Apellido'],
           empleado['Segundo Apellido'],
-          empleado['Fecha Nacimiento'],
+          fechaNacConvertida,
           empleado.Salario,
           empleado.Dpi,
           empleado.Dirección,
-          empleado['Fecha Inicio'],
+          fechaIniConvertida,
         ]);
       }
     } catch (error) {
